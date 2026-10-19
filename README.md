@@ -149,5 +149,9 @@ practica-01-firsthacking/
 
 ## 7. Conclusión
 
-La práctica demuestra la diferencia entre una sospecha y una vulnerabilidad demostrada. Observar el puerto 21 abierto y la versión vsftpd 2.3.4 era solo un indicio; la vulnerabilidad quedó demostrada únicamente al ejecutar el script `ftp-vsftpd-backdoor`, que logró ejecutar comandos como root dentro del contenedor (CVE-2011-2523). El impacto demostrado es el control del contenedor como root sin autenticación; el daño que ese acceso permitiría (robo de datos, persistencia, pivotaje) es plausible pero no se comprobó, por respetar el alcance. La corrección pasa por sustituir el componente comprometido por software mantenido y de origen confiable, o eliminar el servicio si no es necesario, verificando después que el servicio legítimo funciona y que el backdoor ya no se explota.
+Lo que más me llevo de esta práctica es la diferencia entre sospechar que algo es vulnerable y comprobarlo de verdad. Al principio solo tenía una pista: el puerto 21 abierto y la versión vsftpd 2.3.4, que es famosa por tener una puerta trasera. Pero eso por sí solo no prueba nada; podría haber una versión parcheada o que el backdoor no respondiera.
+
+La prueba real llegó al lanzar el script ftp-vsftpd-backdoor, que consiguió ejecutar comandos dentro del contenedor como usuario root y sin pedir contraseña. Ahí dejó de ser una sospecha y pasó a ser un problema confirmado (CVE-2011-2523).
+
+Aun así, quiero dejar claro que solo probé lo justo para confirmar el fallo (los comandos id y hostname). Con ese acceso se podría hacer mucho más daño —robar o borrar datos, dejar el equipo controlado o saltar a otras máquinas—, pero eso no lo hice porque no entraba en lo que tenía permitido. Para arreglar el problema de raíz habría que cambiar esa versión de vsftpd por una actual y de confianza, o quitar el FTP si no hace falta, y después comprobar que el servicio normal sigue funcionando pero el backdoor ya no se puede usar.
 
