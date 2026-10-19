@@ -147,7 +147,7 @@ practica-01-firsthacking/
 5. Comprobar el servicio: `nmap -sV -p 21 -n -Pn "$IP_OBJETIVO"`
 6. Cerrar: `sudo docker stop practica01-firsthacking`
 
-## 7. Conclusiones y fuentes
+## 7. Conclusión
 
 La práctica demuestra la diferencia entre una sospecha y una vulnerabilidad demostrada. Observar el puerto 21 abierto y la versión vsftpd 2.3.4 era solo un indicio; la vulnerabilidad quedó demostrada únicamente al ejecutar el script `ftp-vsftpd-backdoor`, que logró ejecutar comandos como root dentro del contenedor (CVE-2011-2523). El impacto demostrado es el control del contenedor como root sin autenticación; el daño que ese acceso permitiría (robo de datos, persistencia, pivotaje) es plausible pero no se comprobó, por respetar el alcance. La corrección pasa por sustituir el componente comprometido por software mantenido y de origen confiable, o eliminar el servicio si no es necesario, verificando después que el servicio legítimo funciona y que el backdoor ya no se explota.
 
