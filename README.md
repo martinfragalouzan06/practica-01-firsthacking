@@ -2,10 +2,8 @@
 
 **Informe de resolución de laboratorio**
 
-| | |
-|---|---|
-| **Alumno** | Martín Fraga Louzán |
-| **Módulo** | Hacking Ético |
+**Alumno:** Martín Fraga Louzán
+**Módulo:** Hacking Ético
 
 ---
 
